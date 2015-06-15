@@ -109,14 +109,14 @@ EvolutionaryAlgorithm::parse_arguments(const vector<string> &arguments) {
     }
 
 
-    bounds_type = argument_exists(arguments, "wrap_radians");
+    bound_type = argument_exists(arguments, "wrap_radians");
     if (!wrap_radians) {
         if (!quiet) cerr << "Argument '--wrap_radians' not found, parameters with a min bound of -2pi and a max bound of 2pi will not wrap around the bounds." << endl;
     }
     
     if(argument_exists(arguments, "stochastic_bounds"))
     {
-        bounds_type = 2;
+        bound_type = bound_type | 2;
     }
     else
     {
