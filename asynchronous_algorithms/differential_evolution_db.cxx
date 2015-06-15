@@ -217,7 +217,7 @@ DifferentialEvolutionDB::construct_from_database(MYSQL_ROW row) throw (string) {
     string_to_vector<double>(row[18], min_bound);
     string_to_vector<double>(row[19], max_bound);
     app_id = atoi(row[20]);
-    wrap_radians = atoi(row[21]);
+    bounds_type = (atoi(row[21]) | atoi(row[22]) << 1);
     number_parameters = min_bound.size();
 
     //Get the individual information from the database
@@ -310,7 +310,8 @@ DifferentialEvolutionDB::insert_to_database() throw (string) {
           << ", min_bound = '" << vector_to_string<double>(min_bound) << "'"
           << ", max_bound = '" << vector_to_string<double>(max_bound) << "'"
           << ", app_id = " << app_id 
-          << ", wrap_radians = " << wrap_radians;
+          << ", wrap_radians = " << bounds_type & 1
+          << ", stochastic_bounds = " << bounds_type & 2;
 
     mysql_query(conn, query.str().c_str());
 
