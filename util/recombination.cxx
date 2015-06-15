@@ -44,7 +44,7 @@ using std::endl;
 void
 Recombination::bound_parameters(const vector<double> &min_bound, const vector<double> &max_bound, vector<double> &dest, int bound_type, variate_generator< mt19937,uniform_real<> > *rng = 0) {
     for (uint32_t i = 0; i < min_bound.size(); i++) {
-        if ((bound_type == 1) && (fabs(min_bound[i] - (-2 * M_PI)) < 0.00001) && (fabs(max_bound[i] - ( 2 * M_PI)) < 0.0000001) ) {
+        if ((bound_type & 1) && (fabs(min_bound[i] - (-2 * M_PI)) < 0.00001) && (fabs(max_bound[i] - ( 2 * M_PI)) < 0.0000001) ) {
 //            cout << "\tbounding radian start: " << dest[i] << endl;
 
             while (dest[i] > max_bound[i]) dest[i] -= (2 * M_PI);
@@ -55,7 +55,7 @@ Recombination::bound_parameters(const vector<double> &min_bound, const vector<do
         } else {
             //Stochastic Boundary Handling
             //Prevents from sticking to boundaries of search space, but reduces ability to search close to boundaries
-            if(bound_type == 2)
+            if(bound_type & 2)
             {
                 if(rng)
                 {
