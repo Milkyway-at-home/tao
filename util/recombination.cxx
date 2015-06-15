@@ -42,9 +42,9 @@ using std::endl;
  *  Functions dealing with bounds.
  */
 void
-Recombination::bound_parameters(const vector<double> &min_bound, const vector<double> &max_bound, vector<double> &dest, bool wrap_radians) {
+Recombination::bound_parameters(const vector<double> &min_bound, const vector<double> &max_bound, vector<double> &dest, int bound_type, variate_generator< mt19937,uniform_real<> > *rng = 0) {
     for (uint32_t i = 0; i < min_bound.size(); i++) {
-        if (wrap_radians && (fabs(min_bound[i] - (-2 * M_PI)) < 0.00001) && (fabs(max_bound[i] - ( 2 * M_PI)) < 0.0000001) ) {
+        if ((bound_type == 1) && (fabs(min_bound[i] - (-2 * M_PI)) < 0.00001) && (fabs(max_bound[i] - ( 2 * M_PI)) < 0.0000001) ) {
 //            cout << "\tbounding radian start: " << dest[i] << endl;
 
             while (dest[i] > max_bound[i]) dest[i] -= (2 * M_PI);
@@ -53,8 +53,34 @@ Recombination::bound_parameters(const vector<double> &min_bound, const vector<do
 //            cout << "\tbounding radian end:   " << dest[i] << endl;
 
         } else {
-            if (dest[i] < min_bound[i]) dest[i] = min_bound[i];
-            if (dest[i] > max_bound[i]) dest[i] = max_bound[i];
+            //Stochastic Boundary Handling
+            //Prevents from sticking to boundaries of search space, but reduces ability to search close to boundaries
+            if(bound_type == 2)
+            {
+                if(rng)
+                {
+                    if (dest[i] < min_bound[i])
+                    {
+                        dest[i] = min_bound[i] + (.5 * *rng() * (max_bound[i] - min_bound[i]));
+                    }
+                    if (dest[i] > max_bound[i])
+                    {
+                        dest[i] = max_bound[i] - (.5 * *rng() * (max_bound[i] - min_bound[i]));
+                    }
+                }
+                else
+                {
+                    std::stringstream oss;
+                    oss << "ERROR Tried to used Stochastic Boundary Handling without RNG."; 
+                    throw oss.str();
+                }
+            }
+            //Classic Boundary Handling
+            else
+            {
+                if (dest[i] < min_bound[i]) dest[i] = min_bound[i];
+                if (dest[i] > max_bound[i]) dest[i] = max_bound[i];
+            }
         }
     }
 }
