@@ -120,6 +120,7 @@ DifferentialEvolutionDB::create_tables(MYSQL *conn) throw (string) {
                 << "    `max_bound` varchar(2048) NOT NULL,"
                 << "    `app_id`    int(11) NOT NULL DEFAULT '-1',"
                 << "    `wrap_radians` tinyint(1) NOT NULL default '0',"
+                << "    `stochastic_bounds` tinyint(1) NOT NULL default '0',"
                 << "PRIMARY KEY (`id`),"
                 << "UNIQUE KEY `name` (`name`)"
                 << ") ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=latin1";
