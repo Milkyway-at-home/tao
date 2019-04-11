@@ -23,10 +23,10 @@ function get_anm_row($row) {
 
 function get_active_anm($con) {
     $query = "SELECT * FROM asynchronous_newton_method WHERE (maximum_iterations <= 0 || maximum_iterations > current_iteration)";
-    $result = mysql_query($query, $con);
+    $result = mysqli_query($con, $query);
 
     $return = array();
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = mysqli_fetch_array($result)) {
         $anm = get_anm_row($row);
         $return[] = $anm;
     }
@@ -36,10 +36,10 @@ function get_active_anm($con) {
 function get_inactive_anm($con) {
     $query = "SELECT * FROM asynchronous_newton_method WHERE (maximum_iterations > 0 && maximum_iterations <= current_iteration)";
 
-    $result = mysql_query($query, $con);
+    $result = mysqli_query($con, $query);
 
     $return = array();
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = mysqli_fetch_array($result)) {
         $anm = get_anm_row($row);
         $return[] = $anm;
     }

@@ -19,10 +19,10 @@ function get_pso_row($row) {
 
 function get_active_pso($con) {
     $query = "SELECT * FROM particle_swarm WHERE (maximum_created <= 0 || maximum_created > individuals_created) && (maximum_reported <= 0 || maximum_reported > individuals_reported)";
-    $result = mysql_query($query, $con);
+    $result = mysqli_query($con, $query);
 
     $return = array();
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = mysqli_fetch_array($result)) {
         $pso = get_pso_row($row);
         $return[] = $pso;
     }
@@ -32,10 +32,10 @@ function get_active_pso($con) {
 function get_inactive_pso($con) {
     $query = "SELECT * FROM particle_swarm WHERE (maximum_created > 0 && maximum_created < individuals_created) || (maximum_reported > 0 && maximum_reported < individuals_reported)";
 
-    $result = mysql_query($query, $con);
+    $result = mysqli_query($con, $query);
 
     $return = array();
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = mysqli_fetch_array($result)) {
         $pso = get_pso_row($row);
         $return[] = $pso;
     }

@@ -44,11 +44,11 @@ using std::endl;
 void
 Recombination::bound_parameters(const vector<double> &min_bound, const vector<double> &max_bound, vector<double> &dest, bool wrap_radians) {
     for (uint32_t i = 0; i < min_bound.size(); i++) {
-        if (wrap_radians && (fabs(min_bound[i] - (-2 * M_PI)) < 0.00001) && (fabs(max_bound[i] - ( 2 * M_PI)) < 0.0000001) ) {
+        if (wrap_radians && (fabs(min_bound[i] - (0.0)) < 0.001) && (fabs(max_bound[i] - (M_PI)) < 0.01) ) {
 //            cout << "\tbounding radian start: " << dest[i] << endl;
 
-            while (dest[i] > max_bound[i]) dest[i] -= (2 * M_PI);
-            while (dest[i] < min_bound[i]) dest[i] += (2 * M_PI);
+            while (dest[i] > max_bound[i]) dest[i] -= (M_PI);
+            while (dest[i] < min_bound[i]) dest[i] += (M_PI);
 
 //            cout << "\tbounding radian end:   " << dest[i] << endl;
 

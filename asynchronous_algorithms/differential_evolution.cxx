@@ -312,6 +312,12 @@ DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &paramet
 
         for (uint32_t j = 0; j < number_parameters; j++) {
             differential[j] = population[random_individual1][j] - population[random_individual2][j];
+            if (wrap_radians && (fabs(min_bound[j] - (0.0)) < 0.001) && (fabs(max_bound[j] - (M_PI)) < 0.01) ) {  
+	        double tempDifferential = M_PI - differential[j];
+		if(differential[j] > tempDifferential) {
+                    differential[j] = tempDifferential;
+                }
+            }
         }
     }
 

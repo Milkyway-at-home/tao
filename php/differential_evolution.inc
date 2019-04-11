@@ -23,10 +23,10 @@ function get_de_row($row) {
 
 function get_active_de($con) {
     $query = "SELECT * FROM differential_evolution WHERE (maximum_created <= 0 || maximum_created > individuals_created) && (maximum_reported <= 0 || maximum_reported > individuals_reported)";
-    $result = mysql_query($query, $con);
-
+    $result = mysqli_query($con, $query);
+	
     $return = array();
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = mysqli_fetch_array($result)) {
         $de = get_de_row($row);
         $return[] = $de;
     }
@@ -36,10 +36,10 @@ function get_active_de($con) {
 function get_inactive_de($con) {
     $query = "SELECT * FROM differential_evolution WHERE (maximum_created > 0 && maximum_created < individuals_created) || (maximum_reported > 0 && maximum_reported < individuals_reported)";
 
-    $result = mysql_query($query, $con);
+    $result = mysqli_query($con, $query);
 
     $return = array();
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = mysqli_fetch_array($result)) {
         $de = get_de_row($row);
         $return[] = $de;
     }

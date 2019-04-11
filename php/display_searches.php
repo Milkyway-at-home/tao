@@ -7,10 +7,10 @@ require_once("particle_swarm.inc");
 
 require_once("db.inc");
 
-$host = '127.0.0.1';
+if($mysqli->connect_errno) {
+    echo "ERROR: Unable to connect to database.";
+}
 
-$con = mysql_connect($host, $user, $pass);
-mysql_select_db($db, $con);
 
 echo "
 <!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN' 'http://www.w3.org/TR/html4/loose.dtd'>
@@ -96,22 +96,22 @@ $print_de_table($active_de);
 
 }
 
-$active_de = get_active_de($con);
+$active_de = get_active_de($mysqli);
 print_search_row("active_de", "Active Asynchronous Differential Evolution", print_de_table, $active_de);
 
-$inactive_de = get_inactive_de($con);
+$inactive_de = get_inactive_de($mysqli);
 print_search_row("inactive_de", "Inactive Asynchronous Differential Evolution", print_de_table, $inactive_de);
 
-$active_pso = get_active_pso($con);
+$active_pso = get_active_pso($mysqli);
 print_search_row("active_pso", "Active Particle Swarm Optimization", print_pso_table, $active_pso);
 
-$inactive_pso = get_inactive_pso($con);
+$inactive_pso = get_inactive_pso($mysqli);
 print_search_row("inactive_pso", "Inactive Particle Swarm Optimization", print_pso_table, $inactive_pso);
 
-$active_anm = get_active_anm($con);
+$active_anm = get_active_anm($mysqli);
 print_search_row("active_anm", "Active Asnychronous Newton Method Searches", print_anm_table, $active_anm);
 
-$inactive_anm = get_inactive_anm($con);
+$inactive_anm = get_inactive_anm($mysqli);
 print_search_row("inactive_anm", "Inactive Asnychronous Newton Method Searches", print_anm_table, $inactive_anm);
 
 echo "<div class='accordion-group'>";

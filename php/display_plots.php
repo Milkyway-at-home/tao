@@ -6,14 +6,11 @@ echo "
 ";
 require_once("db.inc");
 
-$host = '127.0.0.1';
-
-$con = mysql_connect($host, $user, $pass);
-mysql_select_db($db, $con);
-
-
 //echo "GET: " . json_encode($_GET) . "\n";
 //echo "POST: " . json_encode($_POST) . "\n";
+if($mysqli->connect_errno) {
+    echo "ERROR: Unable to connect to database.";
+}
 
 
 $de = array();
@@ -81,7 +78,7 @@ if (!empty($_GET)) {
     foreach (array_keys($queries) as $search_type_name) {
         foreach (array_keys($queries[$search_type_name]) as $current_id) {
             $name_query = "SELECT name FROM " . $search_type_name . " WHERE id = " . $current_id;
-            $row = mysql_fetch_assoc( mysql_query($name_query, $con) );
+            $row = mysqli_fetch_assoc( mysqli_query($mysqli, $name_query) );
             $search_name = $row['name'];
 
             $fitness_query = "SELECT * FROM (";
@@ -97,10 +94,10 @@ if (!empty($_GET)) {
 
 //            echo $fitness_query . "<br><br>";
 
-            $result = mysql_query($fitness_query, $con);
+            $result = mysqli_query($mysqli, $fitness_query);
 
             $fitnesses = array();
-            while ($row = mysql_fetch_assoc($result)) {
+            while ($row = mysqli_fetch_assoc($result)) {
                 foreach ($queries[$search_type_name][$current_id] as $fitness_type) {
                     $f = array( intval($row['evaluation']), doubleval($row[$fitness_type]) );
                     if ( $f[1] < -99999 ) $f[1] = -99999;
@@ -138,7 +135,7 @@ if (!empty($_GET)) {
             $fitness_type = $vals[2];
 
             $name_query = "SELECT name FROM " . $search_type_name . " WHERE id = " . $search_id;
-            $row = mysql_fetch_assoc( mysql_query($name_query, $con) );
+            $row = mysql_fetch_assoc( mysqli_query($mysqli, $name_query) );
             $search_name = $row['name'];
 
             $fitness_query = "SELECT evaluation, " . $fitness_type . " FROM " . $search_type_name . "_log WHERE search_id = " . $search_id;
@@ -148,7 +145,7 @@ if (!empty($_GET)) {
 
             echo $fitness_query . "<br><br>";
 
-            $result = mysql_query($fitness_query, $con);
+            $result = mysqli_query($mysqli, $fitness_query);
 
             $fitnesses = array();
             while ($row = mysql_fetch_assoc($result)) {
@@ -173,7 +170,7 @@ if (!empty($_GET)) {
 /*
 $query = "SELECT evaluation, fitness FROM particle_swarm_log WHERE swarm_id = 2 and global = true LIMIT 100";
 
-$result = mysql_query($query, $con);
+$result = mysqli_query($mysqli, $query);
 $php_evaluations = array();
 $php_fitnesses = array();
 

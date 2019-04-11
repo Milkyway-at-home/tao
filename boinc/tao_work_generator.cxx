@@ -56,8 +56,20 @@
 #include "fpops_from_parameters.hxx"
 #endif
 
+//Set sleep time between attempts to generate workunits
+//Prevents generation of too many workunits
+#ifdef NBODY
+#define SLEEP_TIME 30
+#else
+#define SLEEP_TIME 2
+#endif
 
-#define CUSHION 500 // maintain at least this many unsent results
+#ifdef __MW_SEPARATION__
+#define CUSHION 10000 // maintain at least this many unsent results
+#else
+#define CUSHION 1000
+#endif
+
 #define REPLICATION_FACTOR  1
 
 using std::ostringstream;
@@ -104,6 +116,7 @@ int make_job(string search_name,
     wu.max_error_results = REPLICATION_FACTOR*4;
     wu.max_total_results = REPLICATION_FACTOR*8;
     wu.max_success_results = REPLICATION_FACTOR*4;
+    wu.priority = 1;
 
     wu.batch = search_id;
 
@@ -111,6 +124,7 @@ int make_job(string search_name,
         wu.rsc_fpops_est    = parse_xml<double>(extra_xml, "rsc_fpops_est");
         wu.rsc_fpops_bound  = parse_xml<double>(extra_xml, "rsc_fpops_bound");
         wu.rsc_disk_bound   = parse_xml<double>(extra_xml, "rsc_disk_bound");
+        wu.canonical_credit = parse_xml<double>(extra_xml, "credit");
     } catch (string err_msg) {
         log_messages.printf(MSG_CRITICAL, "ERROR: parsing extra xml for workunit field: '%s'\n", err_msg.c_str());
         exit(1);
@@ -305,7 +319,7 @@ void main_loop() {
     while (1) {
         check_stop_daemons();
 
-        long int n;
+        long n;
         retval = count_unsent_results(n, app.id);
 
         if (retval) {
@@ -314,7 +328,7 @@ void main_loop() {
         }
 
         if (n > CUSHION) {
-            sleep(30);
+            sleep(1);
         } else {
             int njobs = (CUSHION - n)/REPLICATION_FACTOR;
             log_messages.printf(MSG_DEBUG, "Making %d jobs\n", njobs);
@@ -328,7 +342,7 @@ void main_loop() {
             // Now sleep for a few seconds to let the transitioner
             // create instances for the jobs we just created.
             // Otherwise we could end up creating an excess of jobs.
-            sleep(30);
+            sleep(SLEEP_TIME);
         }
     }
 }

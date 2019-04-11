@@ -13,8 +13,8 @@ require_once("/boinc/src/milkyway_server/tao/php/db.inc");
 
 $host = '127.0.0.1';
 
-$con = mysql_connect($host, $user, $pass);
-mysql_select_db($db, $con);
+$con = mysqli_connect($host, $user, $pass);
+mysqli_select_db($db, $con);
 
 //echo "GET: " . json_encode($_GET) . "\n";
 //echo "<br>";
@@ -29,8 +29,8 @@ echo "</tr>\n";
 
 echo "<tr>";
 $query = "SELECT input_filenames FROM tao_workunit_information WHERE search_name like '$search_name'";
-$result = mysql_query($query);
-$row = mysql_fetch_array($result);
+$result = mysqli_query($query);
+$row = mysqli_fetch_array($result);
 
 $input_filenames = explode(",", substr($row['input_filenames'], 1, -1));
 
@@ -49,12 +49,12 @@ echo "</tr>\n";
 
 function get_count($table_name, $where_clause, $con) {
     $query = "SELECT count(*) FROM $table_name WHERE $where_clause";
-    $result = mysql_query($query, $con);
+    $result = mysqli_query($query, $con);
 
 //    echo "$query <br>\n";
 
     if ($result) {
-        $row = mysql_fetch_array($result);
+        $row = mysqli_fetch_array($result);
         $count = $row['count(*)'];
 //        echo "$count <br>\n";
     } else {
@@ -79,7 +79,7 @@ echo "</table>";
 
 function show_error_results($where_clause, $con) {
     $query = "SELECT id, workunitid, userid, hostid, app_version_id FROM result WHERE " . $where_clause;
-    $result = mysql_query($query, $con);
+    $result = mysqli_query($query, $con);
 
     echo "<table class>\n";
     echo "<tr>\n";
@@ -91,7 +91,7 @@ function show_error_results($where_clause, $con) {
 
     $app_version_names = array();
 
-    while ($row = mysql_fetch_array($result)) {
+    while ($row = mysqli_fetch_array($result)) {
         if (!array_key_exists($row['hostid'], $info_by_hostid)) {
             $info_by_hostid[$row['hostid']]->hostid = $row['hostid'];
             $info_by_hostid[$row['hostid']]->userids = array();
@@ -110,9 +110,9 @@ function show_error_results($where_clause, $con) {
                 $app_version_names[ $row['app_version_id'] ] = "app_version_id: " . $row['app_version_id'] . " (anonymous?)";
             } else {
                 $query2 = "SELECT xml_doc FROM app_version WHERE id = " . $row['app_version_id'];
-                $result2 = mysql_query($query2, $con);
+                $result2 = mysqli_query($query2, $con);
 
-                $row2 = mysql_fetch_array($result2);
+                $row2 = mysqli_fetch_array($result2);
                 $doc = $row2['xml_doc'];
 
                 $first_pos = strpos($doc, "<name>") + 6;
@@ -161,8 +161,8 @@ function show_error_results($where_clause, $con) {
 
             if (!array_key_exists($info->workunitids[$i], $workunit_cmd_line)) {
                 $query = "SELECT xml_doc FROM workunit WHERE id = " . $info->workunitids[$i];
-                $result = mysql_query($query);
-                $row = mysql_fetch_array($result);
+                $result = mysqli_query($query);
+                $row = mysqli_fetch_array($result);
 
                 $xml_doc = $row['xml_doc'];
                 $first_pos = strpos($xml_doc, "<command_line>") + 14;

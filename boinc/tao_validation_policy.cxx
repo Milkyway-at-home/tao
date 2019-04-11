@@ -56,6 +56,18 @@ using boost::uniform_real;
 
 variate_generator< mt11213b, uniform_real<> > random_number_generator(mt11213b( time(0) ), uniform_real<>(0.0, 1.0));
 
+/* New BOINC mandated usage and init functions.
+ * These can be updated in the future, but we will just say they succeed for now.
+ */
+void validate_handler_usage(){
+    return;
+}
+
+
+int validate_handler_init(int argc, char** argv) {
+    return 0;
+}
+
 /*
  * Given a set of results, check for a canonical result,
  * i.e. a set of at least min_quorum/2+1 results for which

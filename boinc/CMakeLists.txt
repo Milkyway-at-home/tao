@@ -26,9 +26,12 @@ include_directories(
     ${BOINC_INCLUDE_DIR}/tools/
 )
 
+add_definitions(-D__MW_SEPARATION__)
+
 add_executable(tao_work_generator tao_work_generator workunit_information)
 #target_link_libraries(tao_work_generator asynchronous_algorithms db_asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES} ${CURL_LIBRARIES})
 target_link_libraries(tao_work_generator db_asynchronous_algorithms asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES})
+
 
 add_executable(tao_stop_search tao_stop_search messages)
 #target_link_libraries(tao_work_generator asynchronous_algorithms db_asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES} ${CURL_LIBRARIES})
