@@ -1,1 +1,4 @@
 db.inc
+
+# Ignore build directory
+build
