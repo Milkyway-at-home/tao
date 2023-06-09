@@ -13,10 +13,10 @@ include_directories(
 	${MYSQL_INCLUDE_DIR}
 )
 
-add_executable(tao_validator ${BOINC_INCLUDE_DIR}/sched/validator ${BOINC_INCLUDE_DIR}/sched/validate_util ${BOINC_INCLUDE_DIR}/lib/md5_file tao_validation_policy)
+add_executable(tao_validator ${BOINC_INCLUDE_DIR}/sched/validator.cpp ${BOINC_INCLUDE_DIR}/sched/validate_util.cpp ${BOINC_INCLUDE_DIR}/sched/script_validator.cpp ${BOINC_INCLUDE_DIR}/lib/md5_file.cpp tao_validation_policy.cxx)
 target_link_libraries(tao_validator db_asynchronous_algorithms asynchronous_algorithms ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES})
 
-add_executable(tao_assimilator ${BOINC_INCLUDE_DIR}/sched/assimilator tao_assimilation_policy)
+add_executable(tao_assimilator ${BOINC_INCLUDE_DIR}/sched/assimilator.cpp tao_assimilation_policy.cxx)
 target_link_libraries(tao_assimilator ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES})
 
 #find_package(CURL REQUIRED)
@@ -28,18 +28,18 @@ include_directories(
 
 add_definitions(-D__MW_SEPARATION__)
 
-add_executable(tao_work_generator tao_work_generator workunit_information)
+add_executable(tao_work_generator tao_work_generator.cxx workunit_information.cxx)
 #target_link_libraries(tao_work_generator asynchronous_algorithms db_asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES} ${CURL_LIBRARIES})
 target_link_libraries(tao_work_generator db_asynchronous_algorithms asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 
-add_executable(tao_stop_search tao_stop_search messages)
+add_executable(tao_stop_search tao_stop_search.cxx messages.cxx)
 #target_link_libraries(tao_work_generator asynchronous_algorithms db_asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES} ${CURL_LIBRARIES})
 target_link_libraries(tao_stop_search db_asynchronous_algorithms asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES})
 
-add_executable(tao_search_status tao_search_status messages)
+add_executable(tao_search_status tao_search_status.cxx messages.cxx)
 #target_link_libraries(tao_work_generator asynchronous_algorithms db_asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES} ${CURL_LIBRARIES})
 target_link_libraries(tao_search_status db_asynchronous_algorithms asynchronous_algorithms ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES})
 
-add_library(workunit_information workunit_information)
+add_library(workunit_information workunit_information.cxx)
 target_link_libraries(workunit_information ${UNDVC_COMMON_LIBRARY} ${BOINC_SERVER_LIBRARIES} ${MYSQL_LIBRARIES} ${OPENSSL_LIBRARIES})

@@ -34,6 +34,7 @@
 #include "backend_lib.h"
 #include "parse.h"
 #include "util.h"
+#include "filesys.h"
 #include "svn_version.h"
 
 #include "sched_config.h"
