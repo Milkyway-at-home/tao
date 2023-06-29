@@ -28,7 +28,7 @@ make
 Requirements:
 
 undvc_common (make in a similar fashion)
-JSON 11 ( https://github.com/dropbox/json11 )
+rapidjson (https://github.com/Tencent/rapidjson)
 
 TODO:
     * clean up constructors (use set methods)

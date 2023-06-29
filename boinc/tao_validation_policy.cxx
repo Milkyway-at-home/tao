@@ -59,7 +59,7 @@ variate_generator< mt11213b, uniform_real<> > random_number_generator(mt11213b( 
 /* New BOINC mandated usage and init functions.
  * These can be updated in the future, but we will just say they succeed for now.
  */
-void validate_handler_usage(){
+/*void validate_handler_usage(){
     return;
 }
 
@@ -67,7 +67,7 @@ void validate_handler_usage(){
 int validate_handler_init(int argc, char** argv) {
     return 0;
 }
-
+*/
 /*
  * Given a set of results, check for a canonical result,
  * i.e. a set of at least min_quorum/2+1 results for which
