@@ -503,7 +503,15 @@ DifferentialEvolutionDB::new_individual(uint32_t &id, vector<double> &parameters
 
 bool
 DifferentialEvolutionDB::insert_individual(uint32_t id, const vector<double> &parameters, double fitness, uint32_t seed) throw (string) {
-    bool modified = DifferentialEvolution::insert_individual(id, parameters, fitness);
+
+    bool modified = false;
+
+    // APPARENTLY the WU generator can just make WUs with the wrong bundle size
+    // if they're too big to place into the DB they'll crash things, so check that here
+    // if too big, ignore and don't add to the population
+    if (vector_to_string<double>(parameters).length() < 2048) {
+
+    modified = DifferentialEvolution::insert_individual(id, parameters, fitness);
 
     if (modified) {
         ostringstream individual_query;
@@ -522,7 +530,7 @@ DifferentialEvolutionDB::insert_individual(uint32_t id, const vector<double> &pa
 
         if (mysql_errno(conn) != 0) {
             ostringstream ex_msg;
-            ex_msg << "ERROR: updating individual with query: '" << individual_query.str() << "'. Error: " << mysql_errno(conn) << " -- '" << mysql_error(conn) << "'. Thrown on " << __FILE__ << ":" << __LINE__;
+            ex_msg << "ERROR: updating individual with query: '" << individual_query.str() << "'. Error: " << mysql_errno(conn) << " -- '" << mysql_error(conn) << "'. Thrown on " << __FILE__ << ":" << __LINE__ << vector_to_string<double>(parameters) << vector_to_string<double>(parameters).length();
             throw ex_msg.str();
         }
 
@@ -576,6 +584,8 @@ DifferentialEvolutionDB::insert_individual(uint32_t id, const vector<double> &pa
             throw ex_msg.str();
         }
 
+
+    }
 
     }
 
