@@ -9,7 +9,7 @@ echo "
 </head>
 <html>
 ";
-require_once("/boinc/src/milkyway_server/tao/php/db.inc");
+require_once("/boinc/src/BOINCBuild1.0.4/tao/php/db.inc");
 
 $host = '127.0.0.1';
 
@@ -31,7 +31,8 @@ echo "<tr>";
 $query = "SELECT input_filenames FROM tao_workunit_information WHERE search_name like '$search_name'";
 $result = mysqli_query($query);
 $row = mysqli_fetch_array($result);
-
+//echo json_encode($query);
+//echo json_encode($row);
 $input_filenames = explode(",", substr($row['input_filenames'], 1, -1));
 
 echo "<td>" . $input_filenames[0] . "</td> <td>" . $input_filenames[1] . "</td>";
@@ -133,8 +134,8 @@ function show_error_results($where_clause, $con) {
         echo "<tr class='d" . ($row_type & 1) . "'> ";
         $row_type++;
 
-        echo "<td><a href='http://milkyway.cs.rpi.edu/milkyway/show_host_detail.php?hostid=" . $info->hostid . "'>" . $info->hostid . "</a></td> ";
-        echo "<td><a href='http://milkyway.cs.rpi.edu/milkyway/show_user.php?userid=" . $info->userids[0] . "'>" . $info->userids[0] . "</a></td> ";
+        echo "<td><a href='http://milkyway-new.cs.rpi.edu/milkyway/show_host_detail.php?hostid=" . $info->hostid . "'>" . $info->hostid . "</a></td> ";
+        echo "<td><a href='http://milkyway-new.cs.rpi.edu/milkyway/show_user.php?userid=" . $info->userids[0] . "'>" . $info->userids[0] . "</a></td> ";
 
         echo "<td>";
 
@@ -153,9 +154,9 @@ function show_error_results($where_clause, $con) {
         $n = count($info->ids);
         for ($i = 0; $i < $n; $i++) {
             echo "<tr class='d" . ($i & 1) . "'><td>";
-            echo "<a href='http://milkyway.cs.rpi.edu/milkyway/result.php?resultid=" . $info->ids[$i] . "'>" . $info->ids[$i] . "</a>";
+            echo "<a href='http://milkyway-new.cs.rpi.edu/milkyway/result.php?resultid=" . $info->ids[$i] . "'>" . $info->ids[$i] . "</a>";
             echo "</td><td>";
-            echo "<a href='http://milkyway.cs.rpi.edu/milkyway/workunit.php?wuid=" . $info->workunitids[$i] . "'>" . $info->workunitids[$i] . "</a>";
+            echo "<a href='http://milkyway-new.cs.rpi.edu/milkyway/workunit.php?wuid=" . $info->workunitids[$i] . "'>" . $info->workunitids[$i] . "</a>";
 
             echo "</td><td>";
 

@@ -67,8 +67,10 @@
 
 #ifdef __MW_SEPARATION__
 #define CUSHION 10000 // maintain at least this many unsent results
+bool separation = 1;
 #else
 #define CUSHION 1000
+bool separation = 0;
 #endif
 
 #define REPLICATION_FACTOR  1
@@ -125,12 +127,24 @@ int make_job(string search_name,
         wu.rsc_fpops_est    = parse_xml<double>(extra_xml, "rsc_fpops_est");
         wu.rsc_fpops_bound  = parse_xml<double>(extra_xml, "rsc_fpops_bound");
         wu.rsc_disk_bound   = parse_xml<double>(extra_xml, "rsc_disk_bound");
-        wu.canonical_credit = parse_xml<double>(extra_xml, "credit");
     } catch (string err_msg) {
         log_messages.printf(MSG_CRITICAL, "ERROR: parsing extra xml for workunit field: '%s'\n", err_msg.c_str());
         exit(1);
     }
 
+    try {
+        wu.canonical_credit = parse_xml<double>(extra_xml, "credit");
+    } catch (string err_msg) {
+        if(separation) {
+	    log_messages.printf(MSG_CRITICAL, "ERROR: parsing extra xml for workunit field: '%s'\n", err_msg.c_str());
+            exit(1);
+	}
+	//This is only an issue for separation which uses predefined credit.
+	//
+	//If this is nbody we can disregard this because we use a different credit type.
+	//If we change credit in the future this may need to be changed
+    }	
+	
     const char* infiles[input_filenames.size()];
     for (uint32_t i = 0; i < input_filenames.size(); i++) {
         infiles[i] = input_filenames[i].c_str();
