@@ -9,7 +9,7 @@ echo "
 </head>
 <html>
 ";
-require_once("/boinc/src/BOINCBuild1.0.4/tao/php/db.inc");
+require_once("/boinc/src/tao/php/db.inc");
 
 $host = '127.0.0.1';
 
