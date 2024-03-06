@@ -9,17 +9,25 @@ echo "
 </head>
 <html>
 ";
-require_once("/boinc/src/tao/php/db.inc");
+require_once("db.inc");
 
-$host = '127.0.0.1';
+//$host = '127.0.0.1';
 
-$con = mysqli_connect($host, $user, $pass);
-mysqli_select_db($db, $con);
+//$mysqli = mysqli_connect($host, $user, $pass);
+//mysqli_select_db($db, $mysqli);
+
+if($mysqli->connect_errno) {
+    echo "ERROR: Unable to connect to database.";
+}
 
 //echo "GET: " . json_encode($_GET) . "\n";
 //echo "<br>";
 //echo "POST: " . json_encode($_POST) . "\n";
 //echo "<br>";
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 echo "<h3>Search Information</h3>\n";
 echo "<table>\n";
@@ -29,7 +37,7 @@ echo "</tr>\n";
 
 echo "<tr>";
 $query = "SELECT input_filenames FROM tao_workunit_information WHERE search_name like '$search_name'";
-$result = mysqli_query($query);
+$result = mysqli_query($mysqli, $query);
 $row = mysqli_fetch_array($result);
 //echo json_encode($query);
 //echo json_encode($row);
@@ -48,9 +56,9 @@ echo "<td><div class='error_stats_header'>count</div></td> <td><div class='error
 echo "<td><div class='error_stats_header'>didn't need</div></td> <td><div class='error_stats_header'>validate error</div></td> <td><div class='error_stats_header'>client detached</div></td>";
 echo "</tr>\n";
 
-function get_count($table_name, $where_clause, $con) {
+function get_count($table_name, $where_clause, $mysqli) {
     $query = "SELECT count(*) FROM $table_name WHERE $where_clause";
-    $result = mysqli_query($query, $con);
+    $result = mysqli_query($mysqli, $query);
 
 //    echo "$query <br>\n";
 
@@ -64,13 +72,13 @@ function get_count($table_name, $where_clause, $con) {
     return $count;
 }
 
-$result_count = get_count("result", "name like '$search_name%'", $con);
-$success_count = get_count("result", "name like '$search_name%' and outcome = 1", $con);
-$error_count = get_count("result", "name like '$search_name%' and outcome = 3", $con);
-$no_reply_count = get_count("result", "name like '$search_name%' and outcome = 4", $con);
-$didnt_need_count = get_count("result", "name like '$search_name%' and outcome = 5", $con);
-$validate_error_count = get_count("result", "name like '$search_name%' and outcome = 6", $con);
-$client_detached_count = get_count("result", "name like '$search_name%' and outcome = 7", $con);
+$result_count = get_count("result", "name like '$search_name%'", $mysqli);
+$success_count = get_count("result", "name like '$search_name%' and outcome = 1", $mysqli);
+$error_count = get_count("result", "name like '$search_name%' and outcome = 3", $mysqli);
+$no_reply_count = get_count("result", "name like '$search_name%' and outcome = 4", $mysqli);
+$didnt_need_count = get_count("result", "name like '$search_name%' and outcome = 5", $mysqli);
+$validate_error_count = get_count("result", "name like '$search_name%' and outcome = 6", $mysqli);
+$client_detached_count = get_count("result", "name like '$search_name%' and outcome = 7", $mysqli);
 
 echo "<tr class='d0'>";
 echo "<td>$result_count</td> <td>$success_count</td> <td>$error_count</td> <td>$no_reply_count</td> <td>$didnt_need_count</td> <td>$validate_error_count</td> <td>$client_detached_count</td>";
@@ -78,9 +86,9 @@ echo "</tr>\n";
 
 echo "</table>";
 
-function show_error_results($where_clause, $con) {
+function show_error_results($where_clause, $mysqli) {
     $query = "SELECT id, workunitid, userid, hostid, app_version_id FROM result WHERE " . $where_clause;
-    $result = mysqli_query($query, $con);
+    $result = mysqli_query($mysqli, $query);
 
     echo "<table class>\n";
     echo "<tr>\n";
@@ -94,6 +102,7 @@ function show_error_results($where_clause, $con) {
 
     while ($row = mysqli_fetch_array($result)) {
         if (!array_key_exists($row['hostid'], $info_by_hostid)) {
+            $info_by_hostid[$row['hostid']] = new stdClass();
             $info_by_hostid[$row['hostid']]->hostid = $row['hostid'];
             $info_by_hostid[$row['hostid']]->userids = array();
             $info_by_hostid[$row['hostid']]->app_version_ids = array();
@@ -111,7 +120,7 @@ function show_error_results($where_clause, $con) {
                 $app_version_names[ $row['app_version_id'] ] = "app_version_id: " . $row['app_version_id'] . " (anonymous?)";
             } else {
                 $query2 = "SELECT xml_doc FROM app_version WHERE id = " . $row['app_version_id'];
-                $result2 = mysqli_query($query2, $con);
+                $result2 = mysqli_query($mysqli, $query2);
 
                 $row2 = mysqli_fetch_array($result2);
                 $doc = $row2['xml_doc'];
@@ -162,7 +171,7 @@ function show_error_results($where_clause, $con) {
 
             if (!array_key_exists($info->workunitids[$i], $workunit_cmd_line)) {
                 $query = "SELECT xml_doc FROM workunit WHERE id = " . $info->workunitids[$i];
-                $result = mysqli_query($query);
+                $result = mysqli_query($mysqli, $query);
                 $row = mysqli_fetch_array($result);
 
                 $xml_doc = $row['xml_doc'];
@@ -188,11 +197,11 @@ function show_error_results($where_clause, $con) {
 
 echo "<hr/>";
 echo "<h3>Client errors</h3>\n";
-show_error_results("name like '$search_name%' and outcome = 3", $con);
+show_error_results("name like '$search_name%' and outcome = 3", $mysqli);
 
 echo "<hr/>";
 echo "<h3>Validate errors</h3>";
-show_error_results("name like '$search_name%' and outcome = 6", $con);
+show_error_results("name like '$search_name%' and outcome = 6", $mysqli);
 
 echo "</html>";
 ?>
