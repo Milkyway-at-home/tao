@@ -1,6 +1,7 @@
 <?php
 
 function get_pso_row($row) {
+    $pso = new stdClass();
     $pso->id = $row['id'];
     $pso->name = $row['name'];
     $pso->population_size = $row['population_size'];

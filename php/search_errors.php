@@ -134,8 +134,8 @@ function show_error_results($where_clause, $con) {
         echo "<tr class='d" . ($row_type & 1) . "'> ";
         $row_type++;
 
-        echo "<td><a href='http://milkyway-new.cs.rpi.edu/milkyway/show_host_detail.php?hostid=" . $info->hostid . "'>" . $info->hostid . "</a></td> ";
-        echo "<td><a href='http://milkyway-new.cs.rpi.edu/milkyway/show_user.php?userid=" . $info->userids[0] . "'>" . $info->userids[0] . "</a></td> ";
+        echo "<td><a href='https://milkyway.cs.rpi.edu/milkyway/show_host_detail.php?hostid=" . $info->hostid . "'>" . $info->hostid . "</a></td> ";
+        echo "<td><a href='https://milkyway.cs.rpi.edu/milkyway/show_user.php?userid=" . $info->userids[0] . "'>" . $info->userids[0] . "</a></td> ";
 
         echo "<td>";
 
@@ -154,9 +154,9 @@ function show_error_results($where_clause, $con) {
         $n = count($info->ids);
         for ($i = 0; $i < $n; $i++) {
             echo "<tr class='d" . ($i & 1) . "'><td>";
-            echo "<a href='http://milkyway-new.cs.rpi.edu/milkyway/result.php?resultid=" . $info->ids[$i] . "'>" . $info->ids[$i] . "</a>";
+            echo "<a href='https://milkyway.cs.rpi.edu/milkyway/result.php?resultid=" . $info->ids[$i] . "'>" . $info->ids[$i] . "</a>";
             echo "</td><td>";
-            echo "<a href='http://milkyway-new.cs.rpi.edu/milkyway/workunit.php?wuid=" . $info->workunitids[$i] . "'>" . $info->workunitids[$i] . "</a>";
+            echo "<a href='https://milkyway.cs.rpi.edu/milkyway/workunit.php?wuid=" . $info->workunitids[$i] . "'>" . $info->workunitids[$i] . "</a>";
 
             echo "</td><td>";
 

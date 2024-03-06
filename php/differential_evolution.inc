@@ -1,6 +1,7 @@
 <?php
 
 function get_de_row($row) {
+    $de = new stdClass();
     $de->id = $row['id'];
     $de->name = $row['name'];
     $de->population_size = $row['population_size'];

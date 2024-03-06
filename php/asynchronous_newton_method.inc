@@ -1,6 +1,7 @@
 <?php
 
 function get_anm_row($row) {
+    $anm = new stdClass();
     $anm->id = $row['id'];
     $anm->name = $row['name'];
     $anm->minimum_line_search_individuals = $row['minimum_line_search_individuals'];

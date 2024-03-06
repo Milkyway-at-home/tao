@@ -97,22 +97,22 @@ $print_de_table($active_de);
 }
 
 $active_de = get_active_de($mysqli);
-print_search_row("active_de", "Active Asynchronous Differential Evolution", print_de_table, $active_de);
+print_search_row("active_de", "Active Asynchronous Differential Evolution", 'print_de_table', $active_de);
 
 $inactive_de = get_inactive_de($mysqli);
-print_search_row("inactive_de", "Inactive Asynchronous Differential Evolution", print_de_table, $inactive_de);
+print_search_row("inactive_de", "Inactive Asynchronous Differential Evolution", 'print_de_table', $inactive_de);
 
 $active_pso = get_active_pso($mysqli);
-print_search_row("active_pso", "Active Particle Swarm Optimization", print_pso_table, $active_pso);
+print_search_row("active_pso", "Active Particle Swarm Optimization", 'print_pso_table', $active_pso);
 
 $inactive_pso = get_inactive_pso($mysqli);
-print_search_row("inactive_pso", "Inactive Particle Swarm Optimization", print_pso_table, $inactive_pso);
+print_search_row("inactive_pso", "Inactive Particle Swarm Optimization", 'print_pso_table', $inactive_pso);
 
-$active_anm = get_active_anm($mysqli);
-print_search_row("active_anm", "Active Asnychronous Newton Method Searches", print_anm_table, $active_anm);
+//$active_anm = get_active_anm($mysqli);
+//print_search_row("active_anm", "Active Asnychronous Newton Method Searches", 'print_anm_table', $active_anm);
 
-$inactive_anm = get_inactive_anm($mysqli);
-print_search_row("inactive_anm", "Inactive Asnychronous Newton Method Searches", print_anm_table, $inactive_anm);
+//$inactive_anm = get_inactive_anm($mysqli);
+//print_search_row("inactive_anm", "Inactive Asnychronous Newton Method Searches", 'print_anm_table', $inactive_anm);
 
 echo "<div class='accordion-group'>";
 echo "</div>";  //container well
