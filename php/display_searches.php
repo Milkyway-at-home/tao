@@ -59,6 +59,7 @@ echo "<body>";
 echo "<form action='display_plots.php' method='get'>\n";
 
 
+
 echo "
 <div class='container'>
 <ul class='nav nav-pills'>
@@ -162,6 +163,11 @@ echo "
 echo "</div>";  //container
 
 echo "</form>\n";
+
+// Add the back link at the bottom center
+echo "<div style='text-align: center; margin-top: 30px; margin-bottom: 20px;'>";
+echo "<a href='../index.php' style='color: #0066cc; text-decoration: none; font-size: 16px;'>Main Menu</a>";
+echo "</div>";
 
 echo "</body>\n";
 

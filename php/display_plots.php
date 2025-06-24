@@ -4,6 +4,8 @@ echo "
 <title>TAO Parameter Optimization Progress Plots</title>
 </head>
 ";
+
+
 require_once("db.inc");
 
 //echo "GET: " . json_encode($_GET) . "\n";
@@ -300,4 +302,16 @@ $(function () {
 
 })(jQuery);
 </script>
+
+<?php
+// Add the back links at the bottom center
+echo "<div style='text-align: center; margin-top: 30px; margin-bottom: 20px;'>";
+echo "<a href='display_searches.php' style='color: #0066cc; text-decoration: none; font-size: 16px;'>TAO Searches</a>";
+echo "<br><br>";
+echo "<a href='../index.php' style='color: #0066cc; text-decoration: none; font-size: 16px;'>Main Menu</a>";
+echo "</div>";
+?>
+
+</body>
+</html>
 
