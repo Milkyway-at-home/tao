@@ -90,25 +90,25 @@ class EvolutionaryAlgorithm {
          *  Create/delete an EvolutionaryAlgorithm
          */
         EvolutionaryAlgorithm( const std::vector<std::string> &arguments    /* initialize the DE from command line arguments */
-                             ) throw (std::string);
+                             );
 
         EvolutionaryAlgorithm( const std::vector<double> &min_bound,        /* min bound is copied into the search */
                                const std::vector<double> &max_bound,        /* max bound is copied into the search */
                                const std::vector<std::string> &arguments    /* initialize the DE from command line arguments */
-                             ) throw (std::string);
+                             );
 
         EvolutionaryAlgorithm( const std::vector<double> &min_bound,    /* min bound is copied into the search */
                                const std::vector<double> &max_bound,    /* max bound is copied into the search */
                                const uint32_t population_size,
                                const uint32_t maximum_iterations        /* default value is 0 which means no termination */
-                             ) throw (std::string);
+                             );
 
         EvolutionaryAlgorithm( const std::vector<double> &min_bound,    /* min bound is copied into the search */
                                const std::vector<double> &max_bound,    /* max bound is copied into the search */
                                const uint32_t population_size,
                                const uint32_t maximum_created,          /* default value is 0 which means no termination */
                                const uint32_t maximum_reported          /* default value is 0 which means no termination */
-                             ) throw (std::string);
+                             );
 
 
 
@@ -117,16 +117,16 @@ class EvolutionaryAlgorithm {
         /**
          *  The following methods are used for asynchronous optimization and are purely virtual
          */
-        virtual void new_individual(uint32_t &id, std::vector<double> &parameters) throw (std::string) = 0;
-        virtual void new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed) throw (std::string) = 0;
-        virtual bool insert_individual(uint32_t id, const std::vector<double> &parameters, double fitness, uint32_t seed = 0) throw (std::string) = 0;     /* Returns true if the individual is inserted. */
+        virtual void new_individual(uint32_t &id, std::vector<double> &parameters) = 0;
+        virtual void new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed) = 0;
+        virtual bool insert_individual(uint32_t id, const std::vector<double> &parameters, double fitness, uint32_t seed = 0) = 0;     /* Returns true if the individual is inserted. */
         virtual bool would_insert(uint32_t id, double fitness) = 0;                                                                     /* Returns true if the individual would be inserted. */
 
         /**
          *  The following method is for synchronous optimization and is purely virtual
          */
-        virtual void iterate(double (*objective_function)(const std::vector<double> &)) throw (std::string) = 0;
-        virtual void iterate(double (*objective_function)(const std::vector<double> &, const uint32_t seed)) throw (std::string) = 0;
+        virtual void iterate(double (*objective_function)(const std::vector<double> &)) = 0;
+        virtual void iterate(double (*objective_function)(const std::vector<double> &, const uint32_t seed)) = 0;
 
         virtual void get_individuals(std::vector<Individual> &individuals) = 0;
 };

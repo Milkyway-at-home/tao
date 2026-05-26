@@ -45,10 +45,35 @@ class DifferentialEvolution : public EvolutionaryAlgorithm {
         double global_best_fitness;
         uint32_t global_best_id;
 
+        // L-SHADE parameters
+        std::vector<double> MF;   // size H
+        std::vector<double> MCR;  // size H
+        uint32_t memory_index;    // cycles 0..H-1
+        uint32_t H;               // memory size
+
+        std::vector<double> last_Fi;
+        std::vector<double> last_CRi;
+
+        uint32_t NP_init;   // initial population size
+        uint32_t NP_min;    // minimum population size
+
+        struct SuccessRecord {
+          double Fi;
+          double CRi;
+          double df;   // fitness improvement
+        };
+        std::vector<SuccessRecord> success_pool;
+        std::ofstream ls_log;  // log file for L-SHADE
+
+        // end L-SHADE parameters
+
         DifferentialEvolution();
 
         void initialize();
         void parse_arguments(const std::vector<std::string> &arguments);
+        void update_memory_from_successes();
+        void shrink_population_to(uint32_t new_size);
+        void log_generation_state(uint32_t successes_count);
 
     public:
         void (*print_statistics)(const std::vector<double> &);
@@ -68,11 +93,11 @@ class DifferentialEvolution : public EvolutionaryAlgorithm {
         const static uint16_t RECOMBINATION_SUM = 2;
         const static uint16_t RECOMBINATION_NONE = 3;
 
-        DifferentialEvolution( const std::vector<std::string> &arguments) throw (std::string);
+        DifferentialEvolution( const std::vector<std::string> &arguments);
 
         DifferentialEvolution( const std::vector<double> &min_bound,                                    /* min bound is copied into the search */
                                const std::vector<double> &max_bound,                                    /* max bound is copied into the search */
-                               const std::vector<std::string> &arguments) throw (std::string);          /* initialize the DE from command line arguments */
+                               const std::vector<std::string> &arguments);          /* initialize the DE from command line arguments */
 
         DifferentialEvolution( const std::vector<double> &min_bound,                                    /* min bound is copied into the search */
                                const std::vector<double> &max_bound,                                    /* max bound is copied into the search */
@@ -85,7 +110,7 @@ class DifferentialEvolution : public EvolutionaryAlgorithm {
                                const double crossover_rate,                                             /* crossover rate for recombination */
                                const bool directional,                                                  /* used for directional calculation of differential (this options is not really a recombination) */
                                const uint32_t maximum_iterations                                        /* default value is 0 which means no termination */
-                             ) throw (std::string);
+                             );
 
         DifferentialEvolution( const std::vector<double> &min_bound,                                    /* min bound is copied into the search */
                                const std::vector<double> &max_bound,                                    /* max bound is copied into the search */
@@ -99,7 +124,7 @@ class DifferentialEvolution : public EvolutionaryAlgorithm {
                                const bool directional,                                                  /* used for directional calculation of differential (this options is not really a recombination) */
                                const uint32_t maximum_created,                                          /* default value is 0 which means no termination */
                                const uint32_t maximum_reported                                          /* default value is 0 which means no termination */
-                             ) throw (std::string);
+                             );
 
 
         virtual ~DifferentialEvolution();
@@ -108,16 +133,16 @@ class DifferentialEvolution : public EvolutionaryAlgorithm {
         /**
          *  The following methods are used for asynchronous optimization and are purely virtual
          */
-        virtual void new_individual(uint32_t &id, std::vector<double> &parameters) throw (std::string);
-        virtual void new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed) throw (std::string);
-        virtual bool insert_individual(uint32_t id, const std::vector<double> &parameters, double fitness, uint32_t seed = 0) throw (std::string);     /* Returns true if the individual is inserted. */
+        virtual void new_individual(uint32_t &id, std::vector<double> &parameters);
+        virtual void new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed);
+        virtual bool insert_individual(uint32_t id, const std::vector<double> &parameters, double fitness, uint32_t seed = 0);     /* Returns true if the individual is inserted. */
         virtual bool would_insert(uint32_t id, double fitness);
 
         /**
          *  The following method is for synchronous optimization and is purely virtual
          */
-        void iterate(double (*objective_function)(const std::vector<double> &)) throw (std::string);
-        void iterate(double (*objective_function)(const std::vector<double> &, const uint32_t)) throw (std::string);    //this objective function also requires a seed
+        void iterate(double (*objective_function)(const std::vector<double> &));
+        void iterate(double (*objective_function)(const std::vector<double> &, const uint32_t));    //this objective function also requires a seed
 
         void set_print_statistics(void (*_print_statistics)(const std::vector<double> &));
 
