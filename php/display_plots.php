@@ -4,6 +4,8 @@ echo "
 <title>TAO Parameter Optimization Progress Plots</title>
 </head>
 ";
+
+
 require_once("db.inc");
 
 //echo "GET: " . json_encode($_GET) . "\n";
@@ -187,13 +189,13 @@ while ($row = mysql_fetch_assoc($result)) {
 
 ?>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script type="text/javascript">
 jQuery.noConflict();
 </script>
 
-<script src="http://code.highcharts.com/highcharts.js"></script>
-<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
 
 <div id="container" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
 
@@ -300,4 +302,16 @@ $(function () {
 
 })(jQuery);
 </script>
+
+<?php
+// Add the back links at the bottom center
+echo "<div style='text-align: center; margin-top: 30px; margin-bottom: 20px;'>";
+echo "<a href='display_searches.php' style='color: #0066cc; text-decoration: none; font-size: 16px;'>TAO Searches</a>";
+echo "<br><br>";
+echo "<a href='../index.php' style='color: #0066cc; text-decoration: none; font-size: 16px;'>Main Menu</a>";
+echo "</div>";
+?>
+
+</body>
+</html>
 

@@ -1,4 +1,7 @@
 db.inc
+.htaccess
+.htpasswd
 
 # Ignore build directory
 build
+.vscode
