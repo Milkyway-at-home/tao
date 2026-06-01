@@ -60,11 +60,13 @@ DifferentialEvolution::parse_arguments(const vector<string> &arguments) {
         parent_scaling_factor = 1.0;
     }
 
+    // with adaptive DE update, differential_scaling_factor and crossover_rate are only used as fallbacks, so they are not required to be provided
     if (!get_argument(arguments, "--differential_scaling_factor", false, differential_scaling_factor)) {
         cerr << "Argument '--differential_scaling_factor <F>' not found, using default of 1.0." << endl;
         differential_scaling_factor = 1.0;
     }
 
+    // with adaptive DE update, differential_scaling_factor and crossover_rate are only used as fallbacks, so they are not required to be provided
     if (!get_argument(arguments, "--crossover_rate", false, crossover_rate)) {
         cerr << "Argument '--crossover_rate <F>' not found, using default of 0.5." << endl;
         crossover_rate = 0.5;
@@ -191,7 +193,7 @@ DifferentialEvolution::initialize() {
 
     // population reduction parameters
     NP_init = population_size;
-    if (NP_min < 3) NP_min = 4;
+    if (NP_min < 4) NP_min = 4;
 
     // Ensure seeds vector exists if used elsewhere
     seeds.assign(population_size, 0);
@@ -664,7 +666,7 @@ void DifferentialEvolution::update_memory_from_successes() {
 // Must resize all per-population structures consistently.
 void DifferentialEvolution::shrink_population_to(uint32_t new_size) {
     if (new_size >= population_size) return;
-    if (new_size < 2) new_size = 2;
+    if (new_size < 4) new_size = 4;
 
     // Sanity check: all vectors should match population_size
     if (population.size() != population_size || fitnesses.size() != population_size || 
