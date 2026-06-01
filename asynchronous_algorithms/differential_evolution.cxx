@@ -21,6 +21,11 @@
 #include <vector>
 #include <limits>
 #include <iostream>
+#include <algorithm>
+#include <numeric>
+#include <cmath>
+#include <sstream>
+#include <cassert>
 
 #include "asynchronous_algorithms/evolutionary_algorithm.hxx"
 #include "asynchronous_algorithms/differential_evolution.hxx"
@@ -55,11 +60,13 @@ DifferentialEvolution::parse_arguments(const vector<string> &arguments) {
         parent_scaling_factor = 1.0;
     }
 
+    // with adaptive DE update, differential_scaling_factor and crossover_rate are only used as fallbacks, so they are not required to be provided
     if (!get_argument(arguments, "--differential_scaling_factor", false, differential_scaling_factor)) {
         cerr << "Argument '--differential_scaling_factor <F>' not found, using default of 1.0." << endl;
         differential_scaling_factor = 1.0;
     }
 
+    // with adaptive DE update, differential_scaling_factor and crossover_rate are only used as fallbacks, so they are not required to be provided
     if (!get_argument(arguments, "--crossover_rate", false, crossover_rate)) {
         cerr << "Argument '--crossover_rate <F>' not found, using default of 0.5." << endl;
         crossover_rate = 0.5;
@@ -103,7 +110,7 @@ DifferentialEvolution::parse_arguments(const vector<string> &arguments) {
         } else if (recombination_selection_name.compare("none") == 0) {
             recombination_selection = RECOMBINATION_NONE;
         } else {
-            cerr << "Improperly specified recombination type: '%s'" << parent_selection_name.c_str() << "'" << endl;
+            cerr << "Improperly specified recombination type: '" << recombination_selection_name.c_str() << "'" << endl;
             cerr << "Possibilities are:" << endl;
             cerr << "   binary" << endl;
             cerr << "   exponential" << endl;
@@ -117,6 +124,39 @@ DifferentialEvolution::parse_arguments(const vector<string> &arguments) {
     }
 
     directional = argument_exists(arguments, "directional");
+
+    // L-SHADE-specific parameters (optional to provide)
+    if (!get_argument(arguments, "--H", false, H)) {
+        H = 6; // default memory size
+    }
+    if (!get_argument(arguments, "--NP_min", false, NP_min)) {
+        NP_min = 4; // default minimum population
+    }
+}
+
+//
+// Helper sampling functions
+//
+static inline double sample_uniform01(std::function<double()> &rng) {
+    double u = rng();
+    // clamp away from 0/1 to avoid infinities in cauchy transform
+    if (u <= 0.0) u = std::numeric_limits<double>::min();
+    if (u >= 1.0) u = 1.0 - std::numeric_limits<double>::epsilon();
+    return u;
+}
+
+// Gaussian via Box-Muller 
+static inline double sample_normal(std::function<double()> &rng, double mu, double sigma) {
+    double u1 = sample_uniform01(rng);
+    double u2 = sample_uniform01(rng);
+    double z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+    return mu + sigma * z0;
+}
+
+// Cauchy using inverse CDF
+static inline double sample_cauchy(std::function<double()> &rng, double location, double scale) {
+    double u = sample_uniform01(rng);
+    return location + scale * tan(M_PI * (u - 0.5));
 }
 
 void
@@ -131,14 +171,43 @@ DifferentialEvolution::initialize() {
     fitnesses = vector<double>(population_size, -numeric_limits<double>::max());
 
     print_statistics = NULL;
+
+    // --- L-SHADE additions---
+    // logging 
+    if (ls_log.is_open()) ls_log.close(); // prevents crashing in subsequent runs
+    ls_log.open("lshade_log.csv");
+    ls_log << "gen,NP,best,mean,median,worst,MF,MCR,successes\n";
+
+    // Memory for MF and MCR (size H)
+    if (H == 0) H = 6;
+    MF.assign(H, 0.5);
+    MCR.assign(H, 0.5);
+    memory_index = 0;
+
+    // last used Fi / CRi
+    last_Fi.assign(population_size, 0.5);
+    last_CRi.assign(population_size, 0.5);
+
+    // Pool of successes collected during a generation (population_size evaluations)
+    success_pool.clear();
+
+    // population reduction parameters
+    NP_init = population_size;
+    if (NP_min < 4) NP_min = 4;
+
+    // Ensure seeds vector exists if used elsewhere
+    seeds.assign(population_size, 0);
+
+    maximum_created = 0;
+    maximum_reported = 0;
 }
 
-DifferentialEvolution::DifferentialEvolution(const vector<string> &arguments) throw (string) : EvolutionaryAlgorithm(arguments) {
+DifferentialEvolution::DifferentialEvolution(const vector<string> &arguments) : EvolutionaryAlgorithm(arguments) {
     parse_arguments(arguments);
     initialize();
 }
 
-DifferentialEvolution::DifferentialEvolution(const vector<double> &min_bound, const vector<double> &max_bound, const vector<string> &arguments) throw (string) : EvolutionaryAlgorithm(min_bound, max_bound, arguments) {
+DifferentialEvolution::DifferentialEvolution(const vector<double> &min_bound, const vector<double> &max_bound, const vector<string> &arguments) : EvolutionaryAlgorithm(min_bound, max_bound, arguments) {
     parse_arguments(arguments);
     initialize();
 }
@@ -154,7 +223,7 @@ DifferentialEvolution::DifferentialEvolution( const std::vector<double> &min_bou
                                               const double crossover_rate,                  /* crossover rate for recombination */
                                               const bool directional,                       /* used for directional calculation of differential (this options is not really a recombination) */
                                               const uint32_t maximum_iterations             /* default value is 0 which means no termination */
-                                            ) throw (std::string) : EvolutionaryAlgorithm(min_bound, max_bound, population_size, maximum_iterations) {
+                                            ) : EvolutionaryAlgorithm(min_bound, max_bound, population_size, maximum_iterations) {
 
     if (parent_selection != PARENT_BEST && parent_selection != PARENT_RANDOM && parent_selection != PARENT_CURRENT_TO_BEST && parent_selection != PARENT_CURRENT_TO_RANDOM) {
         std::stringstream oss;
@@ -195,7 +264,7 @@ DifferentialEvolution::DifferentialEvolution( const std::vector<double> &min_bou
                                               const bool directional,                       /* used for directional calculation of differential (this options is not really a recombination) */
                                               const uint32_t maximum_created,               /* default value is 0 which means no termination */
                                               const uint32_t maximum_reported               /* default value is 0 which means no termination */
-                                            ) throw (std::string) : EvolutionaryAlgorithm(min_bound, max_bound, population_size, maximum_iterations) {
+                                            ) : EvolutionaryAlgorithm(min_bound, max_bound, population_size, maximum_iterations) {
 
     if (parent_selection != PARENT_BEST && parent_selection != PARENT_RANDOM && parent_selection != PARENT_CURRENT_TO_BEST && parent_selection != PARENT_CURRENT_TO_RANDOM) {
         std::stringstream oss;
@@ -229,7 +298,7 @@ DifferentialEvolution::~DifferentialEvolution() {
 }
 
 void
-DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed) throw (string) {
+DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed) {
     DifferentialEvolution::new_individual(id, parameters);
 
     seeds[id] = ((*random_number_generator)() * numeric_limits<uint32_t>::max()) / 10.0;    //uint max is too large for some reason
@@ -237,7 +306,7 @@ DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &paramet
 }
 
 void
-DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &parameters) throw (string) {
+DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &parameters) {
     id = current_individual;
     current_individual++;
     if (current_individual >= population_size) {
@@ -292,6 +361,41 @@ DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &paramet
     }
 
     /**
+     *  L-SHADE adaptive parameter sampling:
+     *  sample Fi and CRi using current memory MF/MCR (choose random memory index r)
+     */
+    uint32_t r = (uint32_t)( (*random_number_generator)() * H );
+    if (r >= H) r = H - 1;
+
+    // Wrap the RNG into a callable for the helper functions
+    std::function<double()> rng = [this]() { return (*random_number_generator)(); };
+
+    double Fi = 0.5;
+    double CRi = 0.5;
+
+    // Sample Fi from Cauchy(MF[r], 0.1) until Fi > 0 
+    for (int attempts = 0; attempts < 10; ++attempts) {
+        Fi = sample_cauchy(rng, MF[r], 0.1);
+        if (Fi > 0.0) break;
+    }
+    if (Fi > 1.0) Fi = 1.0;
+    if (Fi <= 0.0) Fi = 0.5; // fallback
+
+    // Sample CRi from Normal(MCR[r], 0.1)
+    CRi = sample_normal(rng, MCR[r], 0.1);
+    if (CRi < 0.0) CRi = 0.0;
+    if (CRi > 1.0) CRi = 1.0;
+
+    // Store last_Fi/CRi for this individual (so insert_individual can use them if it succeeds)
+    if (id >= last_Fi.size()) {
+        // resize if population_size changed unexpectedly
+        last_Fi.resize(id + 1, 0.5);
+        last_CRi.resize(id + 1, 0.5);
+    }
+    last_Fi[id] = Fi;
+    last_CRi[id] = CRi;
+
+    /**
      *  Calculate the differentials.
      */
     vector<double> differential(number_parameters, 0);
@@ -321,23 +425,23 @@ DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &paramet
         }
     }
 
-    for (uint32_t i = 0; i < number_parameters; i++) differential[i] *= differential_scaling_factor / number_pairs;
+    // Use Fi here instead of global differential_scaling_factor (L-SHADE uses Fi per trial)
+    for (uint32_t i = 0; i < number_parameters; i++) differential[i] *= Fi / number_pairs;
 
     /**
      *  Perform the recombination.
      */
-//    cout << "differential: " << vector_to_string(differential) << " parent: " << vector_to_string(parent) << endl;
 
     for (uint32_t i = 0; i < number_parameters; i++) parent[i] += differential[i];
 
     switch (recombination_selection) {
         case RECOMBINATION_BINARY:
-            Recombination::binary_recombination(population[id], parent, crossover_rate, parameters, random_number_generator);
+            Recombination::binary_recombination(population[id], parent, CRi, parameters, random_number_generator);
             Recombination::bound_parameters(min_bound, max_bound, parameters, wrap_radians);
             break;
 
         case RECOMBINATION_EXPONENTIAL:
-            Recombination::exponential_recombination(population[id], parent, crossover_rate, parameters, random_number_generator);
+            Recombination::exponential_recombination(population[id], parent, CRi, parameters, random_number_generator);
             Recombination::bound_parameters(min_bound, max_bound, parameters, wrap_radians);
             break;
 
@@ -358,23 +462,35 @@ DifferentialEvolution::new_individual(uint32_t &id, std::vector<double> &paramet
             break;
     }
 
-//    cout << "new individual: " << vector_to_string(parameters) << endl;
-//    cout << "population[" << id << "]: " << vector_to_string(population[id]) << endl;
     individuals_created++;
 }
 
 
 bool
-DifferentialEvolution::insert_individual(uint32_t id, const std::vector<double> &parameters, double fitness, uint32_t seed) throw (string) {
+DifferentialEvolution::insert_individual(uint32_t id, const std::vector<double> &parameters, double fitness, uint32_t seed) {
     bool modified = false;
     if (fitnesses[id] < fitness) {
         if (fitnesses[id] == -numeric_limits<double>::max()) initialized_individuals++;
+
+        // Record success (Fi, CRi, delta f) for memory update (L-SHADE)
+        {
+            SuccessRecord s;
+            // safety: if id out of range, use defaults
+            if (id < last_Fi.size()) s.Fi = last_Fi[id]; else s.Fi = differential_scaling_factor;
+            if (id < last_CRi.size()) s.CRi = last_CRi[id]; else s.CRi = crossover_rate;
+
+            s.df = fitness - fitnesses[id];
+            // Only record if positive improvement
+            if (s.df > 0.0) {
+                ls_log << "DEBUG: Recording success Fi=" << s.Fi << " CRi=" << s.CRi << " df=" << s.df << endl; // check that successes are being recorded
+                success_pool.push_back(s);
+            }
+        }
 
         fitnesses[id] = fitness;
         population[id].assign(parameters.begin(), parameters.end());
 
         cout.precision(10);
-//        cout <<  current_iteration << ":" << id << " - LOCAL: " << fitness << " " << vector_to_string(parameters) << endl;
 
         if (global_best_fitness < fitness) {
             global_best_id = id;
@@ -392,17 +508,34 @@ DifferentialEvolution::insert_individual(uint32_t id, const std::vector<double> 
             } 
         }
 
-        /*
-        if (log_file != NULL) {
-            double best, average, median, worst;
-            calculate_fitness_statistics(fitnesses, best, average, median, worst);
-            (*log_file) << individuals_reported << " -- b: " << best << ", a: " << average << ", m: " << median << ", w: " << worst << ", " << vector_to_string(parameters) << endl;
-        } 
-        */
-
         modified = true;
     }
     individuals_reported++;
+
+    // After each generation (approximately population_size reported individuals), update memory & possibly shrink population
+    if (population_size > 0 && (individuals_reported % population_size == 0)) {
+        uint32_t successes_count = (uint32_t)success_pool.size();
+        update_memory_from_successes();
+
+        // Linear population size reduction based on current_iteration and maximum_iterations
+        if (maximum_iterations > 0) {
+            double gen_ratio = (double)current_iteration / (double)maximum_iterations;
+            if (gen_ratio > 1.0) gen_ratio = 1.0;
+            if (NP_init < NP_min) NP_min = NP_init;
+            uint32_t target_NP = NP_min + (uint32_t)((1.0 - gen_ratio) * (double)(NP_init - NP_min));
+            if (target_NP < NP_min) target_NP = NP_min;
+            
+            cerr << "DEBUG: gen_ratio=" << gen_ratio << " target_NP=" << target_NP 
+                 << " current_population_size=" << population_size << endl; // check for reduction issues
+            
+            if (target_NP < population_size) {
+                shrink_population_to(target_NP);
+            }
+        }
+
+        log_generation_state(successes_count);
+    }
+
     return modified;
 }
 
@@ -416,7 +549,7 @@ DifferentialEvolution::would_insert(uint32_t id, double fitness) {
  *  The following method is for synchronous optimization and is purely virtual
  */
 void
-DifferentialEvolution::iterate(double (*objective_function)(const std::vector<double> &)) throw (string) {
+DifferentialEvolution::iterate(double (*objective_function)(const std::vector<double> &)) {
     cout << "Initialized differential evolution. " << endl;
     cout << "   maximum_iterations:          " << maximum_iterations << endl;
     cout << "   current_iteration:           " << current_iteration << endl;
@@ -443,7 +576,7 @@ DifferentialEvolution::iterate(double (*objective_function)(const std::vector<do
 }
 
 void
-DifferentialEvolution::iterate(double (*objective_function)(const std::vector<double> &, const uint32_t)) throw (string) {
+DifferentialEvolution::iterate(double (*objective_function)(const std::vector<double> &, const uint32_t)) {
     cout << "Initialized differential evolution. " << endl;
     cout << "   maximum_iterations:          " << maximum_iterations << endl;
     cout << "   current_iteration:           " << current_iteration << endl;
@@ -478,3 +611,132 @@ DifferentialEvolution::get_individuals(std::vector<Individual> &individuals) {
         individuals.push_back(Individual(i, fitnesses[i], population[i], ""));
     }
 }
+
+
+// ----------------- L-SHADE helper methods -----------------
+
+// Update MF and MCR from collected successes using weighted means
+void DifferentialEvolution::update_memory_from_successes() {
+    if (success_pool.empty()) {
+        return;
+    }
+
+    // compute sum of df
+    double sum_df = 0.0;
+    for (auto &s : success_pool) sum_df += s.df;
+    if (sum_df <= 0.0) {
+        success_pool.clear();
+        return;
+    }
+
+    double weight_sum = 0.0;
+    double weighted_F_lehmer_num = 0.0;
+    double weighted_F_lehmer_den = 0.0;
+    double weighted_CR_sum = 0.0;
+
+    for (auto &s : success_pool) {
+        double w = s.df / sum_df;
+        weighted_F_lehmer_num += w * s.Fi * s.Fi;
+        weighted_F_lehmer_den += w * s.Fi;
+        weighted_CR_sum += w * s.CRi;
+        weight_sum += w;
+    }
+
+    // Lehmer mean for MF (numerator / denominator)
+    double new_MF = MF[memory_index];
+    if (weighted_F_lehmer_den > 0.0) {
+        new_MF = weighted_F_lehmer_num / weighted_F_lehmer_den;
+    }
+
+    // Weighted mean for MCR
+    double new_MCR = MCR[memory_index];
+    if (weight_sum > 0.0) {
+        new_MCR = weighted_CR_sum / weight_sum;
+    }
+
+    MF[memory_index] = new_MF;
+    MCR[memory_index] = new_MCR;
+
+    memory_index = (memory_index + 1) % H;
+
+    success_pool.clear();
+}
+
+// Shrink population to new_size keeping the best individuals.
+// Must resize all per-population structures consistently.
+void DifferentialEvolution::shrink_population_to(uint32_t new_size) {
+    if (new_size >= population_size) return;
+    if (new_size < 4) new_size = 4;
+
+    // Sanity check: all vectors should match population_size
+    if (population.size() != population_size || fitnesses.size() != population_size || 
+        last_Fi.size() != population_size || last_CRi.size() != population_size) {
+        cerr << "ERROR: Vector size mismatch before shrink!" << endl;
+        cerr << "  population.size()=" << population.size() 
+             << " fitnesses.size()=" << fitnesses.size()
+             << " last_Fi.size()=" << last_Fi.size()
+             << " last_CRi.size()=" << last_CRi.size()
+             << " population_size=" << population_size << endl;
+        return;
+    }
+
+    // Create index order sorted by fitness descending
+    vector<uint32_t> order(population_size);
+    iota(order.begin(), order.end(), 0);
+    sort(order.begin(), order.end(), [&](uint32_t a, uint32_t b){
+        return fitnesses[a] > fitnesses[b];
+    });
+
+    vector<vector<double>> new_population;
+    vector<double> new_fitnesses;
+    vector<uint32_t> new_seeds;
+    vector<double> new_lastFi;
+    vector<double> new_lastCRi;
+
+    new_population.reserve(new_size);
+    new_fitnesses.reserve(new_size);
+    new_seeds.reserve(new_size);
+    new_lastFi.reserve(new_size);
+    new_lastCRi.reserve(new_size);
+
+    // Keep top new_size individuals
+    for (uint32_t i = 0; i < new_size; ++i) {
+        uint32_t idx = order[i];
+        new_population.push_back(population[idx]);
+        new_fitnesses.push_back(fitnesses[idx]);
+        if (idx < seeds.size()) new_seeds.push_back(seeds[idx]); else new_seeds.push_back(0);
+        if (idx < last_Fi.size()) new_lastFi.push_back(last_Fi[idx]); else new_lastFi.push_back(0.5);
+        if (idx < last_CRi.size()) new_lastCRi.push_back(last_CRi[idx]); else new_lastCRi.push_back(0.5);
+    }
+
+    population = std::move(new_population);
+    fitnesses = std::move(new_fitnesses);
+    seeds = std::move(new_seeds);
+    last_Fi = std::move(new_lastFi);
+    last_CRi = std::move(new_lastCRi);
+
+    population_size = new_size;
+    current_individual = 0;
+}
+
+void DifferentialEvolution::log_generation_state(uint32_t successes_count) {
+    double best, mean, median, worst;
+    calculate_fitness_statistics(fitnesses, best, mean, median, worst);
+
+    // memory_index points to the next slot; the most recently updated slot is (memory_index - 1)
+    uint32_t last_index = 0;
+    if (H > 0) last_index = (memory_index + H - 1) % H;
+
+    ls_log << current_iteration << ","
+           << population_size << ","
+           << best << ","
+           << mean << ","
+           << median << ","
+           << worst << ","
+           << MF[last_index] << ","
+           << MCR[last_index] << ","
+           << successes_count
+           << "\n";
+}
+
+// ----------------- end L-SHADE helper methods -----------------

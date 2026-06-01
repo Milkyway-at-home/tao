@@ -116,7 +116,7 @@ EvolutionaryAlgorithm::parse_arguments(const vector<string> &arguments) {
 }
 
 EvolutionaryAlgorithm::EvolutionaryAlgorithm( const vector<string> &arguments
-                                            ) throw (string) {
+                                            ) {
 
     get_argument_vector<double>(arguments, "--min_bound", true, min_bound);
     get_argument_vector<double>(arguments, "--min_bound", true, max_bound);
@@ -129,7 +129,7 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( const vector<string> &arguments
 EvolutionaryAlgorithm::EvolutionaryAlgorithm( const vector<double> &min_bound,      /* min bound is copied into the search */
                                               const vector<double> &max_bound,      /* max bound is copied into the search */
                                               const vector<string> &arguments       /* initialize the DE from command line arguments */
-                                            ) throw (string) {
+                                            ) {
 
     this->min_bound = vector<double>(min_bound);
     this->max_bound = vector<double>(max_bound);
@@ -143,7 +143,7 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( const vector<double> &min_bound,  
                                               const vector<double> &max_bound,      /* max bound is copied into the search */
                                               const uint32_t population_size,
                                               const uint32_t maximum_iterations     /* default value is 0, which means no termination */
-                                            ) throw (string) {
+                                            ) {
 
     this->population_size = population_size;
     this->maximum_iterations = maximum_iterations;
@@ -160,7 +160,7 @@ EvolutionaryAlgorithm::EvolutionaryAlgorithm( const vector<double> &min_bound,  
                                               const uint32_t population_size,
                                               const uint32_t maximum_created,       /* default value is 0 */
                                               const uint32_t maximum_reported       /* default value is 0 */
-                                            ) throw (string) {
+                                            ) {
 
     this->population_size = population_size;
     this->maximum_created = maximum_created;
