@@ -181,27 +181,3 @@ EvolutionaryAlgorithm::~EvolutionaryAlgorithm() {
         cerr << "DELETED LOG FILE!" << endl;
     }
 }
-
-/**
- * Pure virtual function definitions - these should never be called
- * since EvolutionaryAlgorithm is an abstract base class
- */
-void EvolutionaryAlgorithm::new_individual(uint32_t &id, std::vector<double> &parameters) {
-    throw std::string("EvolutionaryAlgorithm::new_individual not implemented");
-}
-
-void EvolutionaryAlgorithm::new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed) {
-    throw std::string("EvolutionaryAlgorithm::new_individual with seed not implemented");
-}
-
-bool EvolutionaryAlgorithm::insert_individual(uint32_t id, const std::vector<double> &parameters, double fitness, uint32_t seed) {
-    throw std::string("EvolutionaryAlgorithm::insert_individual not implemented");
-}
-
-void EvolutionaryAlgorithm::iterate(double (*objective_function)(const std::vector<double> &)) {
-    throw std::string("EvolutionaryAlgorithm::iterate not implemented");
-}
-
-void EvolutionaryAlgorithm::iterate(double (*objective_function)(const std::vector<double> &, const uint32_t)) {
-    throw std::string("EvolutionaryAlgorithm::iterate with seed not implemented");
-}
