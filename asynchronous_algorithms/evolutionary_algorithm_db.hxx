@@ -37,10 +37,10 @@ class EvolutionaryAlgorithmDB {
         uint32_t get_id()        { return id; }
         std::string get_name()  { return name; }
 
-        virtual void new_individual(uint32_t &id, std::vector<double> &parameters);
-        virtual void new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed);
+        virtual void new_individual(uint32_t &id, std::vector<double> &parameters) = 0;
+        virtual void new_individual(uint32_t &id, std::vector<double> &parameters, uint32_t &seed) = 0;
 
-        virtual void update_current_individual();
+        virtual void update_current_individual() = 0;
 
         virtual ~EvolutionaryAlgorithmDB() {
         }
