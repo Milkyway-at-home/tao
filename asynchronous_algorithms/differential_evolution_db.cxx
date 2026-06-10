@@ -120,6 +120,14 @@ DifferentialEvolutionDB::create_tables(MYSQL *conn) throw (string) {
                 << "    `max_bound` varchar(2048) NOT NULL,"
                 << "    `app_id`    int(11) NOT NULL DEFAULT '-1',"
                 << "    `wrap_radians` tinyint(1) NOT NULL default '0',"
+                << "    `H` int(11) NOT NULL DEFAULT '6',"
+                << "    `NP_min` int(11) NOT NULL DEFAULT '4',"
+                << "    `NP_init` int(11) NOT NULL DEFAULT '0',"
+                << "    `memory_index` int(11) NOT NULL DEFAULT '0',"
+                << "    `MF` TEXT NOT NULL,"
+                << "    `MCR` TEXT NOT NULL,"
+                << "    `last_Fi` TEXT NOT NULL,"
+                << "    `last_CRi` TEXT NOT NULL,"
                 << "PRIMARY KEY (`id`),"
                 << "UNIQUE KEY `name` (`name`)"
                 << ") ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=latin1";
@@ -217,6 +225,22 @@ DifferentialEvolutionDB::construct_from_database(MYSQL_ROW row) throw (string) {
     string_to_vector<double>(row[19], max_bound);
     app_id = atoi(row[20]);
     wrap_radians = atoi(row[21]);
+    H = atoi(row[22]);
+    NP_min = atoi(row[23]);
+    NP_init = atoi(row[24]);
+    memory_index = atoi(row[25]);
+    string_to_vector<double>(row[26], MF);
+    string_to_vector<double>(row[27], MCR);
+    string_to_vector<double>(row[28], last_Fi);
+    string_to_vector<double>(row[29], last_CRi);
+    if (H == 0) H = 6;
+    if (NP_min < 4) NP_min = 4;
+    if (NP_init < (uint32_t)population_size) NP_init = population_size;
+    if (memory_index >= H) memory_index = 0;
+    if (MF.size() != H) MF.assign(H, 0.5);
+    if (MCR.size() != H) MCR.assign(H, 0.5);
+    if (last_Fi.size() != population_size) last_Fi.assign(population_size, 0.5);
+    if (last_CRi.size() != population_size) last_CRi.assign(population_size, 0.5);
     number_parameters = min_bound.size();
 
     //Get the individual information from the database
@@ -309,7 +333,15 @@ DifferentialEvolutionDB::insert_to_database() throw (string) {
           << ", min_bound = '" << vector_to_string<double>(min_bound) << "'"
           << ", max_bound = '" << vector_to_string<double>(max_bound) << "'"
           << ", app_id = " << app_id 
-          << ", wrap_radians = " << wrap_radians;
+          << ", wrap_radians = " << wrap_radians
+          << ", H = " << H
+          << ", NP_min = " << NP_min
+          << ", NP_init = " << NP_init
+          << ", memory_index = " << memory_index
+          << ", MF = '" << vector_to_string<double>(MF) << "'"
+          << ", MCR = '" << vector_to_string<double>(MCR) << "'"
+          << ", last_Fi = '" << vector_to_string<double>(last_Fi) << "'"
+          << ", last_CRi = '" << vector_to_string<double>(last_CRi) << "'";
 
     mysql_query(conn, query.str().c_str());
 
@@ -540,11 +572,15 @@ DifferentialEvolutionDB::insert_individual(uint32_t id, const vector<double> &pa
 //                 << "  current_individual = " << current_individual             //probably should not have this here TODO: fix this for standard_benchmarks_db
                  << "  initialized_individuals = " << initialized_individuals
                  << ", current_iteration = " << current_iteration
-//                 << ", maximum_iterations = " << maximum_iterations
-//                 << ", individuals_created = " << individuals_created
-//                 << ", maximum_created = " << maximum_created
                  << ", individuals_reported = " << individuals_reported
-//                 << ", maximum_reported = " << maximum_reported
+                 << ", population_size = " << population_size
+                 << ", NP_init = " << NP_init
+                 << ", NP_min = " << NP_min
+                 << ", memory_index = " << memory_index
+                 << ", MF = '" << vector_to_string<double>(MF) << "'"
+                 << ", MCR = '" << vector_to_string<double>(MCR) << "'"
+                 << ", last_Fi = '" << vector_to_string<double>(last_Fi) << "'"
+                 << ", last_CRi = '" << vector_to_string<double>(last_CRi) << "'"
                  << " WHERE "
                  << "    id = " << this->id << endl;
 
@@ -587,6 +623,10 @@ DifferentialEvolutionDB::insert_individual(uint32_t id, const vector<double> &pa
 
     }
 
+    if (population_size > 0 && (individuals_reported % population_size) == 0) {
+        update_current_individual();
+    }
+
     }
 
     return modified;
@@ -598,8 +638,18 @@ DifferentialEvolutionDB::update_current_individual() throw (string) {
     query << " UPDATE differential_evolution"
         << " SET "
         << "  current_individual = " << current_individual
+        << ", initialized_individuals = " << initialized_individuals
         << ", current_iteration = " << current_iteration
         << ", individuals_created = " << individuals_created
+        << ", individuals_reported = " << individuals_reported
+        << ", population_size = " << population_size
+        << ", NP_init = " << NP_init
+        << ", NP_min = " << NP_min
+        << ", memory_index = " << memory_index
+        << ", MF = '" << vector_to_string<double>(MF) << "'"
+        << ", MCR = '" << vector_to_string<double>(MCR) << "'"
+        << ", last_Fi = '" << vector_to_string<double>(last_Fi) << "'"
+        << ", last_CRi = '" << vector_to_string<double>(last_CRi) << "'"
         << " WHERE "
         << "    id = " << id << endl;
 
